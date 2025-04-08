@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  item-db:
+    image: mongo:3 #menggunakan image mongo dari docker hub
+    networks:
+      - item-app-nw
+    environment: #environment setting untuk mongodb
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: Sandi0987
+      MONGO_INITDB_DATABASE: mydb
+    volumes:
+      - app-db:/data/db #mendefinisikan volume dan path target di container
+    container_name: item-db #memberi nama container dengan nama item-db
+    restart: on-failure #agar container selalu restart ketika terhenti
+
+  item-app:
+    image: item-app:v1  # menggunakan image dari docker hub pribadi
+    ports:
+      - "80:8080" #mapping port 80 ektsernal ke port 8080 internal container
+    networks:
+      - item-app-nw
+    environment: #environment setting untuk konfigurasi database
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: Sandi0987
+    depends_on:
+      - item-db #container ini hanya akan berjalan jika container item-db sudah berjalan normal
+    container_name: item-app #memberi nama container dengan nama item-app
+    restart: on-failure #agar container selalu restart ketika terhenti
+
+volumes:
+  app-db:
+
+networks:
+  item-app-nw:
+    name: item-app-nw
+    driver: bridge
