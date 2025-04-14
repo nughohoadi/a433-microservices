@@ -1,1 +1,37 @@
+version: 2.1
 
+jobs:
+  lint-dockerfile:
+    docker:
+      - image: hadolint/hadolint:latest
+    steps:
+      - checkout
+      - run:
+          name: Lint Dockerfile
+          command: hadolint Dockerfile
+
+  build-app-karsajobs-ui:
+    docker:
+      - image: docker:latest
+    steps:
+      - checkout
+      - run:
+          name: Login to Docker Hub
+          command: echo $PASSWORD_DOCKER_HUB | docker login -u $DOCKER_USERNAME --password-stdin
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t nugrohoadi/karsajobs-ui:latest .
+      - run:
+          name: Push Docker Image to Docker Hub
+          command: |
+            docker push nugrohoadi/karsajobs-ui:latest
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - lint-dockerfile
+      - build-app-karsajobs-ui:
+          requires:
+            - lint-dockerfile
