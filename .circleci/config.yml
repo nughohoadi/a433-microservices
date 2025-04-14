@@ -1,1 +1,56 @@
+version: 2.1
 
+jobs:
+  lint-dockerfile:
+    docker:
+      - image: hadolint/hadolint:latest
+    steps:
+      - checkout
+      - run:
+          name: Lint Dockerfile
+          command: hadolint Dockerfile
+
+  test-app:
+    docker:
+      - image: golang:1.18
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd karsajobs
+            go mod tidy
+      - run:
+          name: Run Unit Tests
+          command: |
+            cd karsajobs
+            go test -v -short --count=1 $(go list ./...)
+
+  build-app-karsajobs:
+    docker:
+      - image: docker:latest
+    steps:
+      - checkout
+      - run:
+          name: Login to Docker Hub
+          command: echo $PASSWORD_DOCKER_HUB | docker login -u $DOCKER_USERNAME --password-stdin
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t nugrohoadi/karsajobs:latest .
+      - run:
+          name: Push Docker Image to Docker Hub
+          command: |
+            docker push nugrohoadi/karsajobs:latest
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - lint-dockerfile
+      - test-app:
+          requires:
+            - lint-dockerfile
+      - build-app-karsajobs:
+          requires:
+            - test-app
