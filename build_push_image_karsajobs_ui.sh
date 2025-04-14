@@ -1,16 +1,22 @@
 #!/bin/bash
 
-# Ganti ini dengan username Docker Hub Anda
-DOCKER_USERNAME="nugrohoadi"
-IMAGE_NAME="$DOCKER_USERNAME/karsajobs-ui:latest"
+# Set parameter
+GITHUB_USERNAME="nughohoadi"
+IMAGE_NAME="ghcr.io/$GITHUB_USERNAME/karsajobs-ui:latest"
 
-echo "🛠️  Membuat Docker image untuk frontend..."
+# Pastikan GITHUB_TOKEN sudah diset sebagai variabel lingkungan atau inputkan secara aman
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo "⚠️  Variabel GITHUB_TOKEN tidak ditemukan. Masukkan token GitHub Anda:"
+    read -s GITHUB_TOKEN
+fi
+
+echo "️  Membuat Docker image untuk frontend..."
 docker build -t $IMAGE_NAME .
 
-echo "🔐 Login ke Docker Hub..."
-echo $PASSWORD_DOCKER_HUB | docker login -u $DOCKER_USERNAME --password-stdin
+echo " Login ke GitHub Packages..."
+echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
-echo "📤 Push image ke Docker Hub..."
+echo " Push image ke GitHub Packages..."
 docker push $IMAGE_NAME
 
 echo "✅ Proses selesai: $IMAGE_NAME"
